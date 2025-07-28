@@ -1,7 +1,6 @@
 package views;
 
 import org.jfree.data.category.DefaultCategoryDataset;
-//import org.w3c.dom.events.MouseEvent;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.JFreeChart;
@@ -21,7 +20,6 @@ import javax.swing.JDialog;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import java.util.List;
-import java.awt.event.ActionEvent;
 import java.awt.Container;
 import java.awt.BorderLayout;
 import java.awt.Font;
@@ -118,7 +116,7 @@ public class ResultadosDialog extends JDialog {
     }
 
     private void populateDataTable() {
-        this.algorithmResults = this.persistenceManager.retrieveAllRecords();
+        this.algorithmResults = this.persistenceManager.getAllResults();
         for (AlgorithmResult resultRecord : this.algorithmResults) {
             this.dataModel.addRow(new Object[]{resultRecord
                 .fetchProcessName(),
@@ -167,9 +165,9 @@ public class ResultadosDialog extends JDialog {
 
         JButton clearResultsButton = new JButton("Limpiar Los Resultados");
         clearResultsButton.addActionListener(actionEvent -> {
-            int confirmationResult = JOptionPane.showConfirmDialog(this, "¿Estás seguro que deseas borrar los resultados obtenidos?", "Confirmacióm", 0);
+            int confirmationResult = JOptionPane.showConfirmDialog(this, "¿Estás seguro que deseas borrar los resultados obtenidos?", "Confirmación", 0);
             if (confirmationResult == 0) {
-                dataAccessObject.eraseStorageContent();
+                dataAccessObject.clearAllResults();
                 this.dataModel.setRowCount(0);
             }
         });

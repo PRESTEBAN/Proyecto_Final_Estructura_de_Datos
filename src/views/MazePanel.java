@@ -9,80 +9,104 @@ import javax.swing.JPanel;
 import models.Cell;
 import models.CellState;
 
+
 public class MazePanel extends JPanel {
-
-    private final int totalRows;
-    private final int totalColumns;
-    private final Cell[][] gridCellMatrix;
-    private final JButton[][] buttonMatrix;
-    private MazeController navigationController;
-
-    public JButton fetchButtonAtPosition(int rowIndex, int columnIndex) {
-        return this.buttonMatrix[rowIndex][columnIndex];
+    
+    private final int gridRows;
+    private final int gridCols;
+    private final Cell[][] cellGrid;
+    private final JButton[][] buttonGrid;
+    private MazeController controller;
+    
+    // Colores renovados - paleta completamente diferente
+    private final Color emptyColor = new Color(240, 248, 255);    
+    private final Color wallColor = new Color(47, 79, 79);        
+    private final Color visitedColor = new Color(255, 182, 193);  
+    private final Color borderColor = new Color(176, 196, 222);   
+    
+    public MazePanel(int rows, int cols) {
+        this.gridRows = rows;
+        this.gridCols = cols;
+        this.cellGrid = new Cell[rows][cols];
+        this.buttonGrid = new JButton[rows][cols];
+        
+        initializePanel();
+        buildGrid();
     }
+    
 
-    public Cell[][] retrieveCellMatrix() {
-        return this.gridCellMatrix;
+    private void initializePanel() {
+        setLayout(new GridLayout(gridRows, gridCols));
+        setBackground(new Color(230, 230, 250)); 
     }
+    
+
+    private void buildGrid() {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
+                createCellAt(row, col);
+            }
+        }
+    }
+    
+
+    private void createCellAt(int row, int col) {
+        Cell newCell = new Cell(row, col);
+        JButton newButton = createStyledButton();
+        
+        final int finalRow = row;
+        final int finalCol = col;
+        
+        newButton.addActionListener(e -> {
+            if (controller != null) {
+                controller.processGridInteraction(finalRow, finalCol);
+            }
+        });
+        
+        cellGrid[row][col] = newCell;
+        buttonGrid[row][col] = newButton;
+        add(newButton);
+    }
+    
+
+    private JButton createStyledButton() {
+        JButton button = new JButton();
+        button.setBackground(emptyColor);
+        button.setOpaque(true);
+        button.setBorder(BorderFactory.createLineBorder(borderColor, 1));
+        return button;
+    }
+    
 
     public void clearVisitedCellStates() {
-        Color creamYellow = new Color(255, 253, 208);
-
-        for (byte rowIterator = 0; rowIterator < this.totalRows; rowIterator++) {
-            
-            for (byte columnIterator = 0; columnIterator < this.totalColumns; columnIterator++) {
-                Cell currentCell = this.gridCellMatrix[rowIterator][columnIterator];
-
-                if (currentCell.state != CellState.BARRIER && currentCell.state != CellState.ORIGIN && currentCell.state != CellState.DESTINATION) {
-                    currentCell.state = CellState.VACANT;
-                    this.buttonMatrix[rowIterator][columnIterator].setBackground(creamYellow);
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
+                Cell cell = cellGrid[row][col];
+                
+                if (shouldResetCell(cell.state)) {
+                    cell.state = CellState.VACANT;
+                    buttonGrid[row][col].setBackground(emptyColor);
                 }
             }
         }
     }
+    
 
-    private void establishGridStructure() {
-        Color creamYellow = new Color(255, 253, 208); 
-        Color borderColor = new Color(200, 190, 140); 
-
-        for (byte rowIterator = 0; rowIterator < this.totalRows; rowIterator++) {
-            for (byte columnIterator = 0; columnIterator < this.totalColumns; columnIterator++) {
-
-                Cell gridCell = new Cell(rowIterator, columnIterator);
-                JButton interactionButton = new JButton();
-
-                interactionButton.setBackground(creamYellow);
-                interactionButton.setOpaque(true);
-                interactionButton.setBorder(BorderFactory.createLineBorder(borderColor));
-
-
-                byte finalRowIndex = rowIterator, finalColumnIndex = columnIterator;
-                interactionButton.addActionListener(actionEvent -> {
-                    if (this.navigationController != null) {
-                        this.navigationController.processGridInteraction(finalRowIndex, finalColumnIndex);
-                    }
-                });
-
-                add(interactionButton);
-                this.gridCellMatrix[rowIterator][columnIterator] = gridCell;
-                this.buttonMatrix[rowIterator][columnIterator] = interactionButton;
-            }
-        }
+    private boolean shouldResetCell(CellState state) {
+        return state != CellState.BARRIER && 
+               state != CellState.ORIGIN && 
+               state != CellState.DESTINATION;
     }
 
-    public void assignNavigationController(MazeController controllerInstance) {
-        this.navigationController = controllerInstance;
+    public Cell[][] retrieveCellMatrix() {
+        return cellGrid;
     }
-
-    public MazePanel(int dimensionRows, int dimensionColumns) {
-        this.totalRows = dimensionRows;
-        this.totalColumns = dimensionColumns;
-
-        this.gridCellMatrix = new Cell[dimensionRows][dimensionColumns];
-        this.buttonMatrix = new JButton[dimensionRows][dimensionColumns];
-
-        setLayout(new GridLayout(dimensionRows, dimensionColumns));
-        establishGridStructure();
+    
+    public JButton fetchButtonAtPosition(int row, int col) {
+        return buttonGrid[row][col];
     }
-
+    
+    public void assignNavigationController(MazeController ctrl) {
+        this.controller = ctrl;
+    }
 }
