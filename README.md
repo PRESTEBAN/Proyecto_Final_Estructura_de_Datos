@@ -93,6 +93,15 @@ Los algoritmos se aplican sobre una matriz de celdas (`Cell`), que puede tener d
   Librería para generar gráficos en Java. En este proyecto se emplea para **graficar los tiempos de ejecución** de cada algoritmo en una interfaz amigable. Permite crear gráficos de barras con ejes configurables, colores y etiquetas personalizadas.
 
 ### Diagrama UML
+###  Parte 1  
+![Diagrama Uml parte 1](assets/UML%201.png)
+
+###  Parte 2  
+![Diagrama Uml parte 2](assets/UML%202.png)
+
+###  Parte 3   
+![Diagrama Uml parte 3](assets/UML%203.png)
+
 
 ## 📸 Capturas de la Interfaz
 
