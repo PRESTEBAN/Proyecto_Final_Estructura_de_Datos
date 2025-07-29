@@ -28,6 +28,13 @@ public class MazeFrame extends JFrame {
     private List<Cell> stepPath;
     private int stepCounter;
     private boolean isStepMode;
+
+
+
+
+    
+
+
     
 
     private final Color[] cellColors = {
