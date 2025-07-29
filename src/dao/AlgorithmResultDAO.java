@@ -5,11 +5,7 @@ import models.AlgorithmResult;
 
 
 public interface AlgorithmResultDAO {
-  
-  void eraseStorageContent();
-  
-  List<AlgorithmResult> retrieveAllRecords();
-  
-  void persistAlgorithmData(AlgorithmResult resultData);
-  
+    void saveResult(AlgorithmResult result);
+    List<AlgorithmResult> getAllResults();
+    void clearAllResults();
 }

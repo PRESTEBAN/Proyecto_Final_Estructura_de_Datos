@@ -1,30 +1,32 @@
 package models;
 
+
 public class AlgorithmResult {
-    private final long executionDuration;
-    private final int routeDistance;
-    private final String processIdentifier;
+    private final String algorithmName;
+    private final int pathLength;
+    private final long executionTime;
 
-    @Override
-    public String toString() {
-        return this.processIdentifier + "," + this.routeDistance + "," + this.executionDuration;
-    }
-
-    public long retrieveExecutionTime() {
-        return this.executionDuration;
-    }
-
-    public int obtainRouteLength() {
-        return this.routeDistance;
+    public AlgorithmResult(String name, int length, long time) {
+        this.algorithmName = name;
+        this.pathLength = length;
+        this.executionTime = time;
     }
 
     public String fetchProcessName() {
-        return this.processIdentifier;
+        return algorithmName;
     }
 
-    public AlgorithmResult(String methodName, int distanceValue, long durationValue) {
-        this.processIdentifier = methodName;
-        this.routeDistance = distanceValue;
-        this.executionDuration = durationValue;
+    public int obtainRouteLength() {
+        return pathLength;
+    }
+
+    public long retrieveExecutionTime() {
+        return executionTime;
+    }
+
+
+    @Override
+    public String toString() {
+        return algorithmName + "," + pathLength + "," + executionTime;
     }
 }

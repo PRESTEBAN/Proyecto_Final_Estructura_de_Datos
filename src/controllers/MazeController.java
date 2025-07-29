@@ -1,3 +1,4 @@
+
 package controllers;
 
 import java.awt.Color;
@@ -6,163 +7,100 @@ import models.Cell;
 import models.CellState;
 import views.MazePanel;
 
+
 public class MazeController {
 
-    public enum InteractionType {
-        SOURCE_POINT, TARGET_POINT, BARRIER_TOGGLE;
+    public enum InteractionMode {
+        SOURCE_POINT, TARGET_POINT, BARRIER_TOGGLE
     }
 
-    private InteractionType activeInteraction = InteractionType.BARRIER_TOGGLE;
-    private Cell sourceLocation;
-    private Cell targetLocation;
-    private final MazePanel gridInterface;
+    private InteractionMode currentMode = InteractionMode.BARRIER_TOGGLE;
+    private Cell sourcePosition;
+    private Cell destinationPosition;
+    private final MazePanel gridView;
+    
+   
+    private final Color[] stateColors = {
+        new Color(255, 253, 208),  
+        Color.BLACK,              
+        Color.GREEN,               
+        Color.RED,                 
+        Color.BLUE                 
+    };
 
-    public MazeController(MazePanel viewComponent) {
-        this.gridInterface = viewComponent;
-        // Cambio: setController -> assignNavigationController
-        viewComponent.assignNavigationController(this);
+    public MazeController(MazePanel panel) {
+        this.gridView = panel;
+        panel.assignNavigationController(this);
     }
 
-    public void modifyInteractionType(InteractionType newType) {
-        this.activeInteraction = newType;
-    }
-
-    public void processGridInteraction(int rowIndex, int columnIndex) {
-        switch (this.activeInteraction) {
-            case SOURCE_POINT:
-                establishSourcePosition(rowIndex, columnIndex);
-                break;
-            case TARGET_POINT:
-                establishTargetPosition(rowIndex, columnIndex);
-                break;
-            case BARRIER_TOGGLE:
-                alternateBarrierState(rowIndex, columnIndex);
-                break;
+   
+    public void processGridInteraction(int row, int col) {
+        Cell targetCell = gridView.retrieveCellMatrix()[row][col];
+        JButton targetButton = gridView.fetchButtonAtPosition(row, col);
+        
+        if (currentMode == InteractionMode.SOURCE_POINT) {
+            processSourceSelection(targetCell, targetButton, row, col);
+        } else if (currentMode == InteractionMode.TARGET_POINT) {
+            processDestinationSelection(targetCell, targetButton, row, col);
+        } else {
+            processBarrierToggle(targetCell, targetButton);
         }
     }
 
-    public void onCellClickedLegacy(int rowIndex, int columnIndex) {
-        Cell selectedCell = fetchCellFromGrid(rowIndex, columnIndex);
-        JButton selectedButton = fetchButtonFromGrid(rowIndex, columnIndex);
 
-        switch (this.activeInteraction) {
-            case SOURCE_POINT:
-                resetPreviousSourceLocation();
-                this.sourceLocation = selectedCell;
-                modifyCellProperties(selectedCell, CellState.ORIGIN);
-                alterButtonAppearance(selectedButton, Color.GREEN);
-                break;
-            case TARGET_POINT:
-                resetPreviousTargetLocation();
-                this.targetLocation = selectedCell;
-                modifyCellProperties(selectedCell, CellState.DESTINATION);
-                alterButtonAppearance(selectedButton, Color.RED);
-                break;
-            case BARRIER_TOGGLE:
-                if (checkIfCellIsWall(selectedCell)) {
-                    applyEmptyStateToCell(selectedCell, selectedButton);
-                } else {
-                    applyWallStateToCell(selectedCell, selectedButton);
-                }
-                break;
+    private void processSourceSelection(Cell newCell, JButton newButton, int row, int col) {
+        clearPreviousSource();
+        sourcePosition = newCell;
+        applyStateChange(newCell, newButton, CellState.ORIGIN);
+    }
+
+    private void processDestinationSelection(Cell newCell, JButton newButton, int row, int col) {
+        clearPreviousDestination();
+        destinationPosition = newCell;
+        applyStateChange(newCell, newButton, CellState.DESTINATION);
+    }
+
+
+    private void processBarrierToggle(Cell cell, JButton button) {
+        CellState newState = (cell.state == CellState.VACANT) ? CellState.BARRIER : CellState.VACANT;
+        applyStateChange(cell, button, newState);
+    }
+
+
+    private void applyStateChange(Cell cell, JButton button, CellState newState) {
+        cell.state = newState;
+        button.setBackground(stateColors[newState.ordinal()]);
+    }
+
+    private void clearPreviousSource() {
+        if (sourcePosition != null) {
+            JButton oldButton = gridView.fetchButtonAtPosition(sourcePosition.row, sourcePosition.col);
+            applyStateChange(sourcePosition, oldButton, CellState.VACANT);
         }
     }
 
-    public void purgeVisitedLocations() {
-        // Cambio: limpiarCeldasVisitadas -> clearVisitedCellStates
-        this.gridInterface.clearVisitedCellStates();
+
+    private void clearPreviousDestination() {
+        if (destinationPosition != null) {
+            JButton oldButton = gridView.fetchButtonAtPosition(destinationPosition.row, destinationPosition.col);
+            applyStateChange(destinationPosition, oldButton, CellState.VACANT);
+        }
+    }
+
+
+    public void modifyInteractionType(InteractionMode mode) {
+        this.currentMode = mode;
     }
 
     public Cell obtainSourceReference() {
-        return this.sourceLocation;
+        return sourcePosition;
     }
 
     public Cell obtainTargetReference() {
-        return this.targetLocation;
+        return destinationPosition;
     }
 
-    public void establishSourcePosition(int rowIndex, int columnIndex) {
-        Cell selectedCell = fetchCellFromGrid(rowIndex, columnIndex);
-        JButton selectedButton = fetchButtonFromGrid(rowIndex, columnIndex);
-
-        resetPreviousSourceLocation();
-
-        this.sourceLocation = selectedCell;
-        modifyCellProperties(selectedCell, CellState.ORIGIN);
-        alterButtonAppearance(selectedButton, Color.GREEN);
-    }
-
-    public void establishTargetPosition(int rowIndex, int columnIndex) {
-        Cell selectedCell = fetchCellFromGrid(rowIndex, columnIndex);
-        JButton selectedButton = fetchButtonFromGrid(rowIndex, columnIndex);
-
-        resetPreviousTargetLocation();
-
-        this.targetLocation = selectedCell;
-        modifyCellProperties(selectedCell, CellState.DESTINATION);
-        alterButtonAppearance(selectedButton, Color.RED);
-    }
-
-    public void alternateBarrierState(int rowIndex, int columnIndex) {
-        Cell selectedCell = fetchCellFromGrid(rowIndex, columnIndex);
-        JButton selectedButton = fetchButtonFromGrid(rowIndex, columnIndex);
-
-        if (checkIfCellIsEmpty(selectedCell)) {
-            applyWallStateToCell(selectedCell, selectedButton);
-        } else if (checkIfCellIsWall(selectedCell)) {
-            applyEmptyStateToCell(selectedCell, selectedButton);
-        }
-    }
-
-    private void resetPreviousSourceLocation() {
-        if (this.sourceLocation != null) {
-            JButton oldButton = fetchButtonFromGrid(this.sourceLocation.row, this.sourceLocation.col);
-            modifyCellProperties(this.sourceLocation, CellState.VACANT);
-            alterButtonAppearance(oldButton, Color.WHITE);
-        }
-    }
-
-    private void resetPreviousTargetLocation() {
-        if (this.targetLocation != null) {
-            JButton oldButton = fetchButtonFromGrid(this.targetLocation.row, this.targetLocation.col);
-            modifyCellProperties(this.targetLocation, CellState.VACANT);
-            alterButtonAppearance(oldButton, Color.WHITE);
-        }
-    }
-
-    private Cell fetchCellFromGrid(int rowIndex, int columnIndex) {
-        // Cambio: getCells -> retrieveCellMatrix
-        return this.gridInterface.retrieveCellMatrix()[rowIndex][columnIndex];
-    }
-
-    private JButton fetchButtonFromGrid(int rowIndex, int columnIndex) {
-        // Cambio: getButton -> fetchButtonAtPosition
-        return this.gridInterface.fetchButtonAtPosition(rowIndex, columnIndex);
-    }
-
-    private void modifyCellProperties(Cell cellReference, CellState newState) {
-        cellReference.state = newState;
-    }
-
-    private void alterButtonAppearance(JButton buttonReference, Color colorValue) {
-        buttonReference.setBackground(colorValue);
-    }
-
-    private boolean checkIfCellIsWall(Cell cellReference) {
-        return cellReference.state == CellState.BARRIER;
-    }
-
-    private boolean checkIfCellIsEmpty(Cell cellReference) {
-        return cellReference.state == CellState.VACANT;
-    }
-
-    private void applyWallStateToCell(Cell cellReference, JButton buttonReference) {
-        modifyCellProperties(cellReference, CellState.BARRIER);
-        alterButtonAppearance(buttonReference, Color.BLACK);
-    }
-
-    private void applyEmptyStateToCell(Cell cellReference, JButton buttonReference) {
-        modifyCellProperties(cellReference, CellState.VACANT);
-        alterButtonAppearance(buttonReference, Color.WHITE);
+    public void purgeVisitedLocations() {
+        gridView.clearVisitedCellStates();
     }
 }
